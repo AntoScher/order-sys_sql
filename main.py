@@ -83,6 +83,44 @@ def delete_order():
     else:
         messagebox.showwarning("Предупреждение", "Выберите заказ для удаления")
 
+def edit_order():
+    selected_item = tree.selection()
+
+    if selected_item:
+        order_id, customer_name, order_details, status = tree.item(selected_item, 'values')
+
+        edit_window = tk.Toplevel(app)
+        edit_window.title("Редактировать заказ")
+
+        tk.Label(edit_window, text="Имя клиента").pack()
+        customer_name_entry_edit = tk.Entry(edit_window)
+        customer_name_entry_edit.pack()
+        customer_name_entry_edit.insert(tk.END, customer_name)
+
+        tk.Label(edit_window, text="Детали заказа").pack()
+        order_details_entry_edit = tk.Entry(edit_window)
+        order_details_entry_edit.pack()
+        order_details_entry_edit.insert(tk.END, order_details)
+
+        def save_changes():
+            conn = sqlite3.connect('business_orders.db')
+            cur = conn.cursor()
+
+            cur.execute("UPDATE orders SET customer_name=?, order_details=? WHERE id=?",
+                        (customer_name_entry_edit.get(), order_details_entry_edit.get(), order_id))
+
+            conn.commit()
+            conn.close()
+
+            view_orders()
+            edit_window.destroy()
+
+        save_button = tk.Button(edit_window, text="Сохранить изменения", command=save_changes)
+        save_button.pack()
+
+    else:
+        messagebox.showwarning("Предупреждение", "Выберите заказ для редактирования")
+
 app = tk.Tk()
 app.title("Система управления заказами")
 
@@ -105,6 +143,9 @@ complete_button.pack(side=tk.LEFT)
 
 delete_button = tk.Button(buttons_frame, text="Удалить заказ", command=delete_order)
 delete_button.pack(side=tk.LEFT)
+
+edit_button = tk.Button(buttons_frame, text="Редактировать заказ", command=edit_order)
+edit_button.pack(side=tk.LEFT)
 
 columns = ("id", "customer_name", "order_details", "status")
 tree = ttk.Treeview(app, columns=columns, show="headings")
